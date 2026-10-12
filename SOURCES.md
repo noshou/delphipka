@@ -95,3 +95,48 @@ primary table must still be read before a value is adopted.
 * Peng & Alexov, Proteins 2017, 85, 282, 10.1002/prot.25221: proton transfer and pKa shifts in protein-DNA/RNA complexes (Alexov group; most relevant to this tool)
 * Wilcox & Bevilacqua, JACS 2013, 135, 7390, 10.1021/ja3125299: fluorescence pKa method, highly shifted pKa in RNA/DNA
 * Ivani et al. (parmbsc1), Nat Methods 2015, 13, 55, 10.1038/nmeth.3658: DNA force field
+
+## Phase 0c: findings from the PDFs in docs/ (read 2026-10-12)
+
+Read the relevant sections of: Tang 2007, Izatt 1971 (Table VI), Acharya 2004 (both), Peng & Alexov,
+Wilcox 2013, Legault 1997, Gonzalez-Olvera 2015/2018, Silva & Bussi, Goh 2012/2013, Zheng 2026 and the
+IUPAC dataset. Not transcribed: Clauwaert & Stockx table (columns unclear in the text extraction),
+Thaplyal chapter, Cornell/Perez/Zgarbova/Ivani/Aduri parameter tables.
+
+Correction: Zenodo 10.5281/zenodo.7236452 (listed as "unverified" above) is real. It is the IUPAC
+Dissociation-Constants dataset (CC BY-NC 4.0) that Zheng 2026 cites, a dataset record rather than a paper.
+
+### Sourced (usable now)
+* RNA A model pKa 3.80: Izatt 1971 Table VI, 5'-AMP N1, 25 C, 0.1 M KNO3. Tang 2007 quotes "3.8 for 5'-AMP at 25 C in 0.1 M KNO3".
+* RNA C model pKa 4.35: Izatt 1971 Table VI, 5'-CMP N3, 25 C, 0.1 M KCl. Tang 2007 quotes 4.3; Peng & Alexov give 4.35 as the standard pKa of RNA Cyt. Other Izatt 5'-CMP rows: 4.21-4.30, 4.24.
+  So param/topology A (3.80) and C (4.35) trace to Izatt, Christensen, Rytting, Chem Rev 1971, 71, 439.
+* Nucleotide phosphate pKa2 (Izatt Table VI, 25 C): 5'-AMP 6.67 (I=0), 6.14-6.43 (I=0.1); 5'-CMP 6.62 (I=0); 5'-dAMP 6.65 (I=0). The code does not titrate phosphate today.
+* Protonated A+/C+ charge method (Tang 2007 Methods): B3LYP/6-31G* ESP fits (Gaussian 98) on A, A+, C, C+, G, U ribonucleosides plus dimethylphosphate conformers; ribose and phosphate charges averaged; Pauling radii, H radius 1.10 A, P radius 1.90 A, radii scaled 87% at eps=4. The numbers are in Tang's Supplementary Data Tables 1-2, which are NOT in the PDF. Get the SI before use.
+* Shipped amber.crg/.siz come from amber98.prm (TINKER), not Tang's set. amber.crg has no neutral RNA A0/C0 entries; DA0/DC0 exist.
+
+### Candidate DNA/G/U/T model values (your decision; not adopted)
+Acharya et al., JACS 2004, 126, 2862, Table 1: 1H NMR in D2O, 298 K, pH corrected for D2O (ionic strength not stated in the text I read).
+
+| base | dN 3'-ethyl phosphate (end) | Etp-dN-pEt (interior) | rN 3'-ethyl phosphate | Etp-rN-pEt (interior) |
+|---|---|---|---|---|
+| A (N1) | 3.35 | 3.82 | 3.11 | 3.71 |
+| C (N3) | 4.12 | 4.34 | 3.84 | 4.24-4.25 |
+| G (N1) | 9.40 | 9.59 | 9.27 | 9.29 |
+| U (N3) | 9.35 | 9.58 | 9.22 | 9.25-9.27 |
+| T (N3) | 9.94 | 10.12 | 9.65 | 9.77 |
+
+The interior (bis-ethyl phosphate) column best models a nucleotide inside a chain. DNA bases are more basic than RNA.
+* Shipped DA 4.10 and DC 4.40 match none of these (dA 3.82, dC 4.34) nor any Izatt row I found (5'-dCMP N3 4.44, spectrophotometry, I=0.05; no 5'-dAMP N1 row). They remain UNSOURCED.
+* Cross-check, IUPAC dataset v2.3d (24,211 rows): adenosine pKaH1 at 25 C 3.34-3.63 depending on ionic strength; cytidine 4.08 (I=0) to 4.22 (I=0.1); guanosine N1 ~9.2-9.5, N7 1.6-2.2.
+
+### In-context shifts (validation targets)
+* Legault & Pardi 1997: leadzyme adenine pKa from <3.1 to 6.5; the highest is a proposed A+-C wobble. Same system as Tang 2007 and Wang 2015 (PDB 1ldz).
+* Wilcox & Bevilacqua 2013: unpaired A and C 3.5 and 4.2; BWYV C8+ pKa 8.15 +/- 0.01; A+-C pair ~7.4-7.6.
+* Gonzalez-Olvera 2015: central G in model oligos ~9.6-9.9. 2018: in single-stranded DNA C protonates first, then A, then G; in duplex DNA the C N3 is unavailable until the duplex unwinds, and A/G protonate first. A duplex C should therefore not titrate normally.
+* Tang 2007: PB (eps=4, non-linear correction) RNA benchmark. Peng & Alexov 2017: DelPhiPKa on protein-DNA/RNA complexes.
+* Goh/Brooks CPHMD-MSlambdaD: pH-REX AUE 0.7 pK on the GAAA tetraloop (2013). Silva & Bussi 2025 calibrate on nucleoside pKa (A 3.5, C 4.2).
+
+### Verdict
+Usable: RNA A 3.80, C 4.35; phosphate pKa2 ~6.1-6.7 (not titrated today). Candidate for DNA/G/U/T: Acharya Table 1 interior column.
+Blocked: DA 4.10 / DC 4.40 (unsourced); protonated-state charges (need Tang SI); neutral RNA A0/C0 charges (need a named force-field source).
+Licence: IUPAC/Zheng data is CC BY-NC 4.0. Read values from it, but do not redistribute it in this repo.
