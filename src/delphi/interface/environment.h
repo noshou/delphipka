@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+
 /**
  * @file environment.h
  * @brief pre-processor marco's used for compiling the code

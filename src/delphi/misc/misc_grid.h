@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+
 /**
  * @file misc_grid.h
  * @brief grid data types and associated operations

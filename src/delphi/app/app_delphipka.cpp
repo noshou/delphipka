@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+
 #include "../delphi/delphi_data.h"
 #include "../space/space.h"
 #include "../solver/solver_fastSOR.h"

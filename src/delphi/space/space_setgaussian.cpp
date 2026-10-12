@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+
 //Tips for Gaussian:
 //the new statement can be added by modifying following files:
 //

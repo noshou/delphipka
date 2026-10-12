@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+
 #ifndef SOLVER_FASTSOR_H
 #define SOLVER_FASTSOR_H
 
