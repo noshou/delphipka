@@ -8,7 +8,15 @@ Prof. Emil Alexov group, Clemson University.
   src/delphiPKa/   - Lin Wang
   src/delphi/      - DelPhi C++ (Chuan Li and colleagues, Clemson University)
 This is the 2016 original (master); the original copyright headers in every source file are retained unchanged.
-The original repository contains no licence file; none is added or changed here.
+The original repository contains no licence file, and the original copyright headers
+state "All rights reserved".
+
+The LICENSE file in this repository (GNU LGPL-3.0) is a PLACEHOLDER only. It is NOT
+legally binding: the original authors (Lin Wang, the Alexov group and the DelPhi
+authors) have not authorized any licence for their code, so no one, including the
+author of this fork, can grant LGPL-3.0 terms over it. Until the original authors
+give written permission, treat the code as all rights reserved: do not redistribute
+it or ship it as part of another package under that licence.
 
 If this work contributes to a publication, cite the references requested in
 README.md:
