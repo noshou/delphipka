@@ -27,5 +27,5 @@ Modifications on branch nucleic-acids
 -------------------------------------
 Evaluation of DNA/RNA pKa and protonation support, by noshou (git user of this
 repository). Every added parameter value is recorded with its source in
-docs/. Modified files carry a note naming this branch and its author next to
+SOURCES.md. Modified files carry a note naming this branch and its author next to
 the original header.

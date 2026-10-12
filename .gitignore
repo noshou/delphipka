@@ -1,0 +1,13 @@
+# docs + copyrighted references
+docs/
+
+# Claude stuff
+.claude/
+CLAUDE.md
+
+# Build output
+*.o
+/delphiPKa
+
+# macOS
+.DS_Store
