@@ -90,3 +90,8 @@ primary table must still be read before a value is adopted.
 * Origin of the 3.80/4.35/4.10/4.40 model values in param/topology.
 * Primary source for phosphate pKa in nucleotides (the report's Gorenstein hit, 10.1016/b978-0-08-091841-9.50023-0, is a 31P NMR compilation, [title only]).
 * U/T/G model values (G N7 and N1, U/T N3) from a primary table.
+
+### Added from the last search batch (Crossref-resolved, [title only])
+* Peng & Alexov, Proteins 2017, 85, 282, 10.1002/prot.25221: proton transfer and pKa shifts in protein-DNA/RNA complexes (Alexov group; most relevant to this tool)
+* Wilcox & Bevilacqua, JACS 2013, 135, 7390, 10.1021/ja3125299: fluorescence pKa method, highly shifted pKa in RNA/DNA
+* Ivani et al. (parmbsc1), Nat Methods 2015, 13, 55, 10.1038/nmeth.3658: DNA force field
