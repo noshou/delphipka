@@ -196,6 +196,7 @@ private:                                            // In DATA CONTAINER
     delphi_real calculateRelaxFactor(); // subroutine relfac()
 
     void itit(); // subroutine itit()
+    bool gpuItit(delphi_real maxres, int& itrOut); // the iteration loop of itit() on a GPU (OpenCL); false: not used, run on the CPU
 
     void nitit(const delphi_real& qfact); // subroutine nitit(qfact)
 

@@ -21,7 +21,7 @@ void CPlaceHydrogen :: run()
 {
     
 #ifdef MPI_PARALLEL
-    id = baysol_mpi_rank();
+    id = delphi_mpi_rank();
 #endif
     
     newPDB.reserve(9999);
@@ -315,7 +315,7 @@ void CPlaceHydrogen :: run()
 void CPlaceHydrogen::output_newPDB() {
     
 #ifdef MPI_PARALLEL
-    id = baysol_mpi_rank();
+    id = delphi_mpi_rank();
 #endif
 
         ofstream output_PDB;

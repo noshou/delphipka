@@ -17,7 +17,7 @@
 void CPdbImport::run() {
 
 #ifdef MPI_PARALLEL
-    id = baysol_mpi_rank();
+    id = delphi_mpi_rank();
 #endif
     
     ifstream pdb_sourcefile(pdb_input);

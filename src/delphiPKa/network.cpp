@@ -128,7 +128,7 @@ void CNetwork :: run()
  
 #ifdef MPI_PARALLEL
     
-    int id = baysol_mpi_rank();
+    int id = delphi_mpi_rank();
     
     if (0==id) {
         

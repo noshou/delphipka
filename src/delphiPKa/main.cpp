@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
-// Modified on branch nucleic-acids by noshou: MPI C++ bindings (removed in MPI-3 / Open MPI 5) replaced by the C API.
+// Modified on branch nucleic-acids by noshou: MPI C++ bindings (removed in MPI-3 / Open MPI 5) replaced by the C API. Ranks pin themselves (cpu_pin.h).
 
 //
 //  main.cpp
@@ -52,6 +52,7 @@
 
 
 #include "prime_environment.h"
+#include "cpu_pin.h"
 #include "global_type.h"
 #include "data_store.h"
 #include "readparam.h"
@@ -123,7 +124,8 @@ int main(int argc, const char * argv[]) {
     
     MPI_Init(NULL, NULL);
 
-    int id = baysol_mpi_rank();
+    int id = delphi_mpi_rank();
+    delphi_pin_rank(id);   // DELPHI_FIRST_CORE / DELPHI_THREADS: see cpu_pin.h
     
 #endif
 

@@ -131,8 +131,8 @@ void CEnergy :: run()
     
     int N = vecIonRes.size();
     
-    id = baysol_mpi_rank();
-    numprocs = baysol_mpi_size();
+    id = delphi_mpi_rank();
+    numprocs = delphi_mpi_size();
     
     int rank_size = N / numprocs;
     MPI_START = ( N / numprocs) * id;

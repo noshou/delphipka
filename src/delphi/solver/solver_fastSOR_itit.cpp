@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
-// Modified on branch nucleic-acids by noshou: iteration cap (needed in single precision).
+// Modified on branch nucleic-acids by noshou: iteration cap (needed in single precision); optional GPU loop.
 
 /*
  * solver_fastSOR_itit.cpp
@@ -120,6 +120,7 @@ void CDelphiFastSOR::itit()
         //}
     itr = 1;
     ires = 0;
+    if (gpuItit(maxres, itr)) goto itit_gpu_done;   // whole loop done on the GPU
     do
     {
             //cout    << " LinLi: 7,7,7; igrid-1,7,7 : " << scientific << prgfPhiMap[(7-1)*iGrid*iGrid+(7-1)*iGrid+7-1] << "   "
@@ -400,6 +401,7 @@ void CDelphiFastSOR::itit()
     }
     while(true);
 
+itit_gpu_done:
     postItr(rmaxl,rmsl);
 
     /*

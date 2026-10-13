@@ -341,7 +341,7 @@ void CTologyImport::sizeinfo_import()
 void CTologyImport::run() {
     
 #ifdef MPI_PARALLEL
-    id = baysol_mpi_rank();
+    id = delphi_mpi_rank();
 #endif
     
     ///////////++++++++++++  Import the topology file  ++++++++++++/////////////

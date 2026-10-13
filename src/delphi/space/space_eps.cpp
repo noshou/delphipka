@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
-// Modified on branch nucleic-acids by noshou: setGaussian() products are reused between the two states of a site.
+// Modified on branch nucleic-acids by noshou: setGaussian() products are reused between the two states of a site. The cache keeps only what later code reads.
 
 #include "../interface/environment.h"
 #include "../delphi/delphi_constants.h"
@@ -132,22 +132,32 @@ void CDelphiSpace::epsmak()
             // setGaussian() is deterministic in the atoms, grid and parameters below (not in the charges), so the
             // second state of a site can take its dielectric maps from the first (see space_gausscache.h)
             const int G1 = iGrid + 1;
+            const bool withG1 = logs;   // gepsmp itself is only read back by the second Gaussian run
             auto capture = [&](GaussState& st) {
                 const size_t n = (size_t)G1*G1*G1;
-                st.g1.resize(n); st.g2.resize(n); st.deb.resize(n);
+                st.g2.alloc(n); st.deb.alloc(n); st.hasG1 = withG1;
+                if (withG1) st.g1.alloc(n);
                 size_t w = 0;
-                for (int a = 0; a < G1; a++) for (int b = 0; b < G1; b++) for (int c = 0; c < G1; c++, w++)
-                { st.g1[w] = gepsmp[a][b][c]; st.g2[w] = gepsmp2[a][b][c]; st.deb[w] = idebmap[a][b][c] ? 1 : 0; }
+                for (int a = 0; a < G1; a++) for (int b = 0; b < G1; b++)
+                {
+                    const SGrid <delphi_real> * r2 = gepsmp2[a][b]; const SGrid <delphi_real> * r1 = gepsmp[a][b]; const bool * rd = idebmap[a][b];
+                    for (int c = 0; c < G1; c++, w++)
+                    { st.g2.data()[w] = r2[c]; st.deb.data()[w] = rd[c] ? 1 : 0; if (withG1) st.g1.data()[w] = r1[c]; }
+                }
                 st.ibgrd = ibgrd_v; st.ibound = iBoundNum;
             };
             auto restore = [&](const GaussState& st) {
                 size_t w = 0;
-                for (int a = 0; a < G1; a++) for (int b = 0; b < G1; b++) for (int c = 0; c < G1; c++, w++)
-                { gepsmp[a][b][c] = st.g1[w]; gepsmp2[a][b][c] = st.g2[w]; idebmap[a][b][c] = (0 != st.deb[w]); }
+                for (int a = 0; a < G1; a++) for (int b = 0; b < G1; b++)
+                {
+                    SGrid <delphi_real> * r2 = gepsmp2[a][b]; SGrid <delphi_real> * r1 = gepsmp[a][b]; bool * rd = idebmap[a][b];
+                    for (int c = 0; c < G1; c++, w++)
+                    { r2[c] = st.g2.data()[w]; rd[c] = (0 != st.deb.data()[w]); if (st.hasG1) r1[c] = st.g1.data()[w]; }
+                }
                 ibgrd_v = st.ibgrd; iBoundNum = st.ibound; ibgrd = &ibgrd_v[-1];
             };
 
-            const char* offEnv = getenv("BAYSOL_GAUSS_CACHE");
+            const char* offEnv = getenv("DELPHI_GAUSS_CACHE");
             if (offEnv && '0' == offEnv[0]) { setGaussian(); }
             else
             {
@@ -171,7 +181,7 @@ void CDelphiSpace::epsmak()
                 }
                 else
                 {
-                    const char* chkEnv = getenv("BAYSOL_GAUSS_CACHE_CHECK");
+                    const char* chkEnv = getenv("DELPHI_GAUSS_CACHE_CHECK");
                     if (chkEnv && '1' == chkEnv[0])
                     {
                         GaussState before; capture(before);     // the state setGaussian() would start from
@@ -180,10 +190,10 @@ void CDelphiSpace::epsmak()
                         restore(before);
                         setGaussian();
                         GaussState fresh; capture(fresh);
-                        const bool same = cached.ibound == fresh.ibound && cached.deb == fresh.deb
+                        const bool same = cached.ibound == fresh.ibound && 0 == memcmp(cached.deb.data(), fresh.deb.data(), cached.deb.size())
                             && cached.ibgrd.size() == fresh.ibgrd.size()
-                            && 0 == memcmp(cached.g1.data(), fresh.g1.data(), cached.g1.size()*sizeof(SGrid<delphi_real>))
                             && 0 == memcmp(cached.g2.data(), fresh.g2.data(), cached.g2.size()*sizeof(SGrid<delphi_real>))
+                            && (!withG1 || 0 == memcmp(cached.g1.data(), fresh.g1.data(), cached.g1.size()*sizeof(SGrid<delphi_real>)))
                             && 0 == memcmp(cached.ibgrd.data(), fresh.ibgrd.data(), cached.ibgrd.size()*sizeof(SGrid<delphi_integer>));
                         fprintf(stderr, "GAUSS_CACHE_CHECK grid=%d %s\n", (int)iGrid, same ? "identical" : "MISMATCH");
                         if (!same) abort();

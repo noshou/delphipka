@@ -30,8 +30,8 @@
 #define MPI_PARALLEL    // This two lines need to be comment out if compiling the code WITHOUT MPI
 #include <mpi.h>        // This two lines need to be comment out if compiling the code WITHOUT MPI
 // The MPI C++ bindings (MPI::COMM_WORLD ...) were removed in MPI-3 / Open MPI 5; use the C API.
-inline int baysol_mpi_rank() { int r = 0; MPI_Comm_rank(MPI_COMM_WORLD, &r); return r; }
-inline int baysol_mpi_size() { int n = 1; MPI_Comm_size(MPI_COMM_WORLD, &n); return n; }
+inline int delphi_mpi_rank() { int r = 0; MPI_Comm_rank(MPI_COMM_WORLD, &r); return r; }
+inline int delphi_mpi_size() { int n = 1; MPI_Comm_size(MPI_COMM_WORLD, &n); return n; }
 
 #include <iostream>
 #include <string>

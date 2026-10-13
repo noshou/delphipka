@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
-// Modified on branch nucleic-acids by noshou: returns the spectral radius (was always 0.0) and uses the analytic Gauss-Seidel radius for Dirichlet boundaries.
+// Modified on branch nucleic-acids by noshou: returns the spectral radius (was always 0.0) and uses the analytic Gauss-Seidel radius for Dirichlet boundaries. The Dirichlet case returns at once (no estimator sweep).
 
 /*
  * solver_fastSOR_relfac.cpp
@@ -13,6 +13,15 @@
 delphi_real CDelphiFastSOR::calculateRelaxFactor()
 {
    delphi_real fRelaxFactor = 0.0;
+
+   //----- Dirichlet boundaries: the radius is known exactly (see the end of this function), so skip the one-sweep estimator,
+   //      which needed a whole initOddEvenItr() and a sweep per solve and was overwritten anyway.
+   if (!rgbPeriodicBndy[0] && !rgbPeriodicBndy[1] && !rgbPeriodicBndy[2])
+   {
+      const delphi_real fCos0 = cos(fPi/(iGrid-1));
+      fSpec = fCos0*fCos0;
+      return fSpec;
+   }
 
    int ix,iy,iz;
    delphi_integer iw;

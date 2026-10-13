@@ -38,7 +38,7 @@ void CTitration2 :: run()
     vector<vector<bool> > vecBool2d;
 
 #ifdef MPI_PARALLEL
-    int id = baysol_mpi_rank();  // MPI rank
+    int id = delphi_mpi_rank();  // MPI rank
     
     if(id==0) {
         
@@ -122,7 +122,7 @@ void CTitration2 :: run()
     
     int N = vecCluster1.size();
     
-    int numprocs = baysol_mpi_size();
+    int numprocs = delphi_mpi_size();
     int MPI_START, MPI_END;
     int rank_size = N / numprocs;
     MPI_START = ( N / numprocs) * id;
