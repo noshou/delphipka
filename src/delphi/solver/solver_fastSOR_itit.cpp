@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
-// Modified on branch nucleic-acids by noshou: iteration cap (needed in single precision); optional GPU loop.
+// Modified on branch nucleic-acids by noshou: iteration cap (needed in single precision); optional GPU loop; several half sweeps per pass over the grid (solver_fastSOR_tblock.cpp).
 
 /*
  * solver_fastSOR_itit.cpp
@@ -121,8 +121,18 @@ void CDelphiFastSOR::itit()
     itr = 1;
     ires = 0;
     if (gpuItit(maxres, itr)) goto itit_gpu_done;   // whole loop done on the GPU
+    tbPrepare();
     do
     {
+        {   // iterations that the convergence test does not look at: several half sweeps per pass over the grid
+            const int b = tbIterations(itr, std::min((int)iLinIterateNum, (int)delphi::DELPHI_MAX_ITERATIONS));
+            if (b > 0)
+            {
+                tbHalfSweeps(2*b);
+                itr += b;
+                continue;
+            }
+        }
             //cout    << " LinLi: 7,7,7; igrid-1,7,7 : " << scientific << prgfPhiMap[(7-1)*iGrid*iGrid+(7-1)*iGrid+7-1] << "   "
             //<< prgfPhiMap[(7-1-1)*iGrid*iGrid+(7-1)*iGrid+(iGrid-1)] << endl;
 

@@ -11,7 +11,7 @@
 
     -n  MPI ranks                                                   (default 4, never more than the cores / THREADS)
     -t  OpenMP threads inside each rank's Poisson-Boltzmann solves  (default 1)
-    -f  first core to use; rank r gets cores FIRST + r*T .. FIRST + r*T + T-1   (default 0)
+    -f  first core to use; rank r gets cores FIRST + r*T .. FIRST + r*T + T-1   (default: the first fast core, 0 if all are alike)
     -x  the delphiPKa binary                                        (default ./delphiPKa, delphiPKa.exe on Windows)
 
 The launcher finds mpiexec or mpirun (Open MPI, MPICH, Intel MPI and Microsoft MPI are recognised), 
@@ -58,11 +58,31 @@ def flavour(launcher):
     return "unknown"
 
 
+def fastest_first_core(need):
+    """First core of a run of `need` consecutive fastest cores (Linux reports cpu_capacity); 0 when that is unknown."""
+    cap = {}
+    try:
+        for name in os.listdir("/sys/devices/system/cpu"):
+            if name.startswith("cpu") and name[3:].isdigit():
+                with open("/sys/devices/system/cpu/%s/cpu_capacity" % name) as f:
+                    cap[int(name[3:])] = int(f.read())
+    except (OSError, ValueError):
+        return 0
+    if not cap:
+        return 0
+    top = max(cap.values())
+    fast = sorted(c for c, v in cap.items() if v == top)
+    for first in fast:
+        if all(first + i in fast for i in range(need)):
+            return first
+    return fast[0]
+
+
 def main():
     ap = argparse.ArgumentParser(description="Run delphiPKa on several MPI ranks.", add_help=True)
     ap.add_argument("-n", type=int, default=4, help="MPI ranks (default 4)")
     ap.add_argument("-t", type=int, default=1, help="OpenMP threads per rank (default 1)")
-    ap.add_argument("-f", type=int, default=0, help="first core to use (default 0)")
+    ap.add_argument("-f", type=int, default=None, help="first core to use (default: the first fast core)")
     ap.add_argument("-x", default=None, help="the delphiPKa binary")
     ap.add_argument("--dry-run", action="store_true", help="print the command and stop")
     ap.add_argument("prm", help="the run.prm file")
@@ -87,8 +107,9 @@ def main():
                 ranks)
             )
 
+    first = a.f if a.f is not None else fastest_first_core(ranks * threads)
     settings = {
-                    "DELPHI_FIRST_CORE": str(a.f), 
+                    "DELPHI_FIRST_CORE": str(first), 
                     "DELPHI_THREADS": str(threads), 
                     "OMP_NUM_THREADS": str(threads)
                 }

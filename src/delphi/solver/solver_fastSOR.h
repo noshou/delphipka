@@ -197,6 +197,13 @@ private:                                            // In DATA CONTAINER
 
     void itit(); // subroutine itit()
     bool gpuItit(delphi_real maxres, int& itrOut); // the iteration loop of itit() on a GPU (OpenCL); false: not used, run on the CPU
+    bool tbPrepare();                              // set up the blocked half sweeps (solver_fastSOR_tblock.cpp); false: use the plain loop
+    int  tbIterations(int itr, int maxItr) const;  // iterations from itr on that can be run blocked (0: none)
+    void tbHalfSweeps(int count);                  // count half sweeps (odd first) in blocks, bit-identical to itrOddPoints/itrEvenPoints
+    bool tbReady = false;
+    int  tbDepth = 8;
+    vector<int> tbStart[2][3], tbOrder[2][3];      // per colour: dielectric terms, face resets, charges bucketed by plane
+    vector<delphi_integer> tbResetPos[2];
 
     void nitit(const delphi_real& qfact); // subroutine nitit(qfact)
 

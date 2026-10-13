@@ -52,7 +52,7 @@ $env:DELPHI_FIRST_CORE = "0"; $env:DELPHI_THREADS = "1"; $env:OMP_NUM_THREADS = 
 mpiexec -n 4 .\delphiPKa.exe run.prm
 ```
 
-On a machine with fast and slow cores start on the fast ones with `-f` (or `DELPHI_FIRST_CORE`), and keep ranks x threads within the
+On a machine with fast and slow cores the launcher starts on the fast ones by itself (Linux reports the core capacities; elsewhere give `-f`, or `DELPHI_FIRST_CORE` without the launcher), so keep ranks x threads within the
 number of fast cores. `DELPHI_PIN=0` switches pinning off and `DELPHI_PIN_VERBOSE=1` reports the cores each rank got.
 
 The SOR solver's relaxation factor is now computed from the grid (it used to be fixed at 0.8 and left the solver under-relaxed, so the pKa values stopped well short of convergence). Converged values differ from older output by up to about 0.4-0.6 pKa units on nucleic acids and about 0.1 on proteins.
@@ -88,7 +88,7 @@ Convergence threshold, base run (MAXC0) : 0.01
 
 
 
-`SCALE0` is the number of grid points per Angstrom of the base run. `MAXC0` is the convergence threshold of the base run only; left out, it is 10 x `MAXC`, which is 0.01 for the default `MAXC` = 0.001. `run.prm` only takes `#` comments at the start of a line, so do not append comments to these lines, and keep the space before the colon (the reader drops the character in front of it). The base run therefore converges to 10 x `MAXC` by default, and tightening `MAXC` tightens the base run with it. To get the old behaviour (base run as tight as the rest), set `MAXC0` equal to `MAXC`:
+`SCALE0` is the number of grid points per Angstrom of the base run. `MAXC0` is the convergence threshold of the base run only; left out, it is 10 x `MAXC`, which is 0.09 for the default `MAXC` = 0.009. `run.prm` only takes `#` comments at the start of a line, so do not append comments to these lines, and keep the space before the colon (the reader drops the character in front of it). The base run therefore converges to 10 x `MAXC` by default, and tightening `MAXC` tightens the base run with it. To get the base run as tight as the rest, set `MAXC0` equal to `MAXC`:
 
 ```text
 Convergence threshold, base run (MAXC0) : 0.001
@@ -108,7 +108,9 @@ Calibration against fully converged references (single precision, one core). 3HD
 | 0.8     | = MAXC                  | 52.6 s     | 0.037     | 0.17       |
 | 0.8     | 0.01                    | 44.7 s     | 0.045     | 0.17       |
 
-With the default, the smaller structures stay within the printed 0.01 of the converged answer (1BNA 0.000, 1SDR 0.004, 1RNA 0.003, 6PTI 0.003, 1CRN 0.005 rms). The error is in pKa units against the converged answer; the few sites that carry it are DNA bases (3-5 of 62 sites above 0.05 for `SCALE0` 0.9 and 0.8). Proteins are insensitive (6PTI: rms 0.004 at `SCALE0` 0.7, 0.006 at 0.5); nucleic acids are not (rms at `SCALE0` 0.9: 1BNA 0.006, 1RNA 0.011, 1SDR 0.033; at 0.7: 0.010, 0.096, 0.051; below 0.7 a DNA/RNA run degrades quickly). For comparison, the original fixed relaxation factor left every pKa about 0.1-0.4 away from convergence. Set `MAXC0` equal to `MAXC` when the last 0.01 matters.
+**`MAXC` default.** The default is `MAXC` = 0.009 (it was 0.001): it saves about a quarter of the SOR iterations and costs about twice the error. Against fully converged double-precision references, with the current code on 4 ranks: 3HDD rms 0.037 / worst site 0.17 at 0.009, against 0.010 / 0.13 at 0.001; 1BNA rms 0.0076 / worst 0.023 at 0.009 against 0.0038 / 0.010 at 0.001. The accuracy breaks down quickly beyond that (1BNA at `MAXC` = 0.012: worst site 0.15). Put `Convergence threshold (MAXC) : 0.001` into `run.prm` when the last 0.01 matters.
+
+With `MAXC` = 0.001, the smaller structures stay within the printed 0.01 of the converged answer (1BNA 0.000, 1SDR 0.004, 1RNA 0.003, 6PTI 0.003, 1CRN 0.005 rms). The error is in pKa units against the converged answer; the few sites that carry it are DNA bases (3-5 of 62 sites above 0.05 for `SCALE0` 0.9 and 0.8). Proteins are insensitive (6PTI: rms 0.004 at `SCALE0` 0.7, 0.006 at 0.5); nucleic acids are not (rms at `SCALE0` 0.9: 1BNA 0.006, 1RNA 0.011, 1SDR 0.033; at 0.7: 0.010, 0.096, 0.051; below 0.7 a DNA/RNA run degrades quickly). For comparison, the original fixed relaxation factor left every pKa about 0.1-0.4 away from convergence. Set `MAXC0` equal to `MAXC` when the last 0.01 matters.
 
 ### Optional GPU (OpenCL)
 

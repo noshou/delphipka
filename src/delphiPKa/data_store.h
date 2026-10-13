@@ -55,7 +55,7 @@ public:
     float exdi    = 80.0;
     float ionrad  =  2.0;
     float prbrad  =  1.4;
-    float maxc    =  0.001;
+    float maxc    =  0.009;
     float scale0  =  1.0;   // grid scale of the base run (grid points per Angstrom); the focusing runs stay at 2 and 4
     float maxc0   = -1.0;   // convergence threshold of the base (whole-molecule) run; < 0 (default): 10 x maxc
     float clusterThreshold = 15.0;

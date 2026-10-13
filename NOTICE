@@ -40,5 +40,5 @@ the original header.
 
 Performance and solver changes on this branch: the SOR relaxation factor is computed from the grid, a quadratic
 vector insert and the MPI C++ bindings were replaced, the dielectric maps are reused between the two states of a
-titratable site, and the Poisson-Boltzmann solves can run on OpenMP threads (scripts/run_parallel.py). Each modified
+titratable site, the Poisson-Boltzmann solves can run on OpenMP threads, on a GPU (OpenCL) and, per MPI rank, with several SOR half sweeps per pass over the grid (scripts/run_parallel.py), and the titration step looks up its pair energies once per cluster instead of once per state. Each modified
 source file starts with a note saying what changed in it.
