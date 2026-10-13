@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
+// Modified on branch nucleic-acids by noshou: MPI C++ bindings (removed in MPI-3 / Open MPI 5) replaced by the C API.
 
 //
 //  main.cpp
@@ -120,9 +121,9 @@ int main(int argc, const char * argv[]) {
     
 #ifdef MPI_PARALLEL
     
-    MPI::Init();
+    MPI_Init(NULL, NULL);
 
-    int id = MPI::COMM_WORLD.Get_rank();
+    int id = baysol_mpi_rank();
     
 #endif
 
@@ -146,7 +147,7 @@ int main(int argc, const char * argv[]) {
         
 #ifdef MPI_PARALLEL
         }
-        MPI::Finalize();
+        MPI_Finalize();
 #endif
         exit(0);
     }
@@ -181,7 +182,7 @@ int main(int argc, const char * argv[]) {
         cout << endl;
 #ifdef MPI_PARALLEL
         }
-        MPI::Finalize();
+        MPI_Finalize();
 #endif
                 
         exit(0);
@@ -241,7 +242,7 @@ int main(int argc, const char * argv[]) {
 
 #ifdef MPI_PARALLEL
     
-    MPI::Finalize();
+    MPI_Finalize();
     
 #endif
     

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
+// Modified on branch nucleic-acids by noshou: setGaussian() products are reused between the two states of a site.
 
 #include "../interface/environment.h"
 #include "../delphi/delphi_constants.h"
@@ -6,6 +7,10 @@
 #include "space_templates.h"
 
 #include "space.h"
+#include "space_gausscache.h"
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
 
 using namespace std;
@@ -123,7 +128,70 @@ void CDelphiSpace::epsmak()
     else
     {
         if(debug_space) cout << "go to setgaussian..." << endl;
-        setGaussian();
+        {
+            // setGaussian() is deterministic in the atoms, grid and parameters below (not in the charges), so the
+            // second state of a site can take its dielectric maps from the first (see space_gausscache.h)
+            const int G1 = iGrid + 1;
+            auto capture = [&](GaussState& st) {
+                const size_t n = (size_t)G1*G1*G1;
+                st.g1.resize(n); st.g2.resize(n); st.deb.resize(n);
+                size_t w = 0;
+                for (int a = 0; a < G1; a++) for (int b = 0; b < G1; b++) for (int c = 0; c < G1; c++, w++)
+                { st.g1[w] = gepsmp[a][b][c]; st.g2[w] = gepsmp2[a][b][c]; st.deb[w] = idebmap[a][b][c] ? 1 : 0; }
+                st.ibgrd = ibgrd_v; st.ibound = iBoundNum;
+            };
+            auto restore = [&](const GaussState& st) {
+                size_t w = 0;
+                for (int a = 0; a < G1; a++) for (int b = 0; b < G1; b++) for (int c = 0; c < G1; c++, w++)
+                { gepsmp[a][b][c] = st.g1[w]; gepsmp2[a][b][c] = st.g2[w]; idebmap[a][b][c] = (0 != st.deb[w]); }
+                ibgrd_v = st.ibgrd; iBoundNum = st.ibound; ibgrd = &ibgrd_v[-1];
+            };
+
+            const char* offEnv = getenv("BAYSOL_GAUSS_CACHE");
+            if (offEnv && '0' == offEnv[0]) { setGaussian(); }
+            else
+            {
+                std::string key;
+                GaussCache::add(key, iGrid);    GaussCache::add(key, fScale);     GaussCache::add(key, cOldMid);
+                GaussCache::add(key, sigma);    GaussCache::add(key, srfcut);     GaussCache::add(key, repsin);
+                GaussCache::add(key, repsout);  GaussCache::add(key, fExternRadius);
+                GaussCache::add(key, iNatom);   GaussCache::add(key, iNObject);   GaussCache::add(key, iNMedia);
+                GaussCache::add(key, bOnlyMol); GaussCache::add(key, inhomo);     GaussCache::add(key, logs);
+                for (delphi_integer ia = 1; ia <= iNatom; ia++)
+                {
+                    GaussCache::add(key, xn2[ia]); GaussCache::add(key, sDelPhiPDB[ia].radius); GaussCache::add(key, iAtomMed[ia]);
+                }
+
+                const GaussState* hit = GaussCache::instance().find(key);
+                if (NULL == hit)
+                {
+                    setGaussian();
+                    GaussState st; capture(st);
+                    GaussCache::instance().store(key, st);
+                }
+                else
+                {
+                    const char* chkEnv = getenv("BAYSOL_GAUSS_CACHE_CHECK");
+                    if (chkEnv && '1' == chkEnv[0])
+                    {
+                        GaussState before; capture(before);     // the state setGaussian() would start from
+                        restore(*hit);
+                        GaussState cached; capture(cached);
+                        restore(before);
+                        setGaussian();
+                        GaussState fresh; capture(fresh);
+                        const bool same = cached.ibound == fresh.ibound && cached.deb == fresh.deb
+                            && cached.ibgrd.size() == fresh.ibgrd.size()
+                            && 0 == memcmp(cached.g1.data(), fresh.g1.data(), cached.g1.size()*sizeof(SGrid<delphi_real>))
+                            && 0 == memcmp(cached.g2.data(), fresh.g2.data(), cached.g2.size()*sizeof(SGrid<delphi_real>))
+                            && 0 == memcmp(cached.ibgrd.data(), fresh.ibgrd.data(), cached.ibgrd.size()*sizeof(SGrid<delphi_integer>));
+                        fprintf(stderr, "GAUSS_CACHE_CHECK grid=%d %s\n", (int)iGrid, same ? "identical" : "MISMATCH");
+                        if (!same) abort();
+                    }
+                    else restore(*hit);
+                }
+            }
+        }
     }
 
 

@@ -5,7 +5,7 @@ CC=mpic++
 TARGET=delphiPKa
 
 ## The Compiler Options to Add
-CFLAGS=-O3 -g3 -c -fmessage-length=0 -std=c++11
+CFLAGS=-O3 -g3 -c -fmessage-length=0 -std=c++11 -fpermissive -fopenmp -DPARALLEL_OMP $(EXTRA)
 
 ## The Libraries to Add
 LIB=
@@ -14,7 +14,7 @@ LIB=
 INCLUDE=
 
 ## The Linker Options to Add
-LDFLAGS= -lgsl -lgslcblas
+LDFLAGS= -fopenmp -lgsl -lgslcblas
 
 ## The Source Code Directories
 DELPHIDIR=./src/delphi

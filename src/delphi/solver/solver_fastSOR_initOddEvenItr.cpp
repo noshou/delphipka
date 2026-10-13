@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
+// Modified on branch nucleic-acids by noshou: clears its push_back vectors so that it can be called twice (relaxation estimate, then the solve).
 
 /*
  * solver_fastSOR_initOddEvenItr.cpp
@@ -14,6 +15,15 @@ void CDelphiFastSOR::initOddEvenItr(const int& forWhom)
    int ix,iy,iz;
    delphi_integer ip,iq;
    delphi_integer iadd1,iadd2,itemp1,itemp2,star,fin;
+
+   /*
+    * everything below is filled with push_back, so start empty: calculateRelaxFactor() and itit() each call this
+    * routine, and without the clear the second call appended to the first one's data and the solver iterated on it
+    */
+   ibndx.clear(); ibndy.clear(); ibndz.clear();
+   phimap1.clear(); phimap2.clear();
+   bndx1.clear(); bndx2.clear(); bndx3.clear(); bndx4.clear();
+
 
    /*
     * setup periodic boundaries

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
+// Modified on branch nucleic-acids by noshou: MPI C++ bindings (removed in MPI-3 / Open MPI 5) replaced by the C API.
 
 //
 //  topology_import.cpp
@@ -70,7 +71,7 @@ void CTologyImport::topology_import()
             
 #ifdef MPI_PARALLEL
         }
-        MPI::Finalize();
+        MPI_Finalize();
 #endif
         
         exit(0);
@@ -170,7 +171,7 @@ void CTologyImport::chargeinfo_import()
             
 #ifdef MPI_PARALLEL
         }
-        MPI::Finalize();
+        MPI_Finalize();
 #endif
         
         exit(0);
@@ -242,7 +243,7 @@ void CTologyImport::chargeinfo_import()
             
 #ifdef MPI_PARALLEL
         }
-        MPI::Finalize();
+        MPI_Finalize();
 #endif
         exit(0);
         
@@ -263,7 +264,7 @@ void CTologyImport::sizeinfo_import()
             
 #ifdef MPI_PARALLEL
         }
-        MPI::Finalize();
+        MPI_Finalize();
 #endif
         
         exit(0);
@@ -330,7 +331,7 @@ void CTologyImport::sizeinfo_import()
             
 #ifdef MPI_PARALLEL
         }
-        MPI::Finalize();
+        MPI_Finalize();
 #endif
         exit(0);
         
@@ -340,7 +341,7 @@ void CTologyImport::sizeinfo_import()
 void CTologyImport::run() {
     
 #ifdef MPI_PARALLEL
-    id = MPI::COMM_WORLD.Get_rank();
+    id = baysol_mpi_rank();
 #endif
     
     ///////////++++++++++++  Import the topology file  ++++++++++++/////////////

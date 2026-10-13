@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
+// Modified on branch nucleic-acids by noshou: flag bQmapZero: the linear solver does not stream the all-zero qmap.
 
 #ifndef SOLVER_FASTSOR_H
 #define SOLVER_FASTSOR_H
@@ -156,6 +157,7 @@ private:                                            // In DATA CONTAINER
     vector<delphi_real> phimap1,phimap2;
     vector<delphi_real> bndx1,bndx2,bndx3,bndx4;
     vector<delphi_real> qmap1,qmap2;
+    bool bQmapZero;                                          // qmap1/2 are only filled by the nonlinear solver (nitit)
     vector<delphi_real> debmap1,debmap2;
     delphi_real om1,om2,om3,om4,sixth;
 
@@ -327,6 +329,7 @@ public:
         iCrgedGridEven  = 0;
         fSpec           = 0.0;
         prgfPhiMap.assign(iGrid*iGrid*iGrid,0.0);
+        bQmapZero = true;
         qmap1.assign(iHalfGridNum,0.0);
         qmap2.assign(iHalfGridNum,0.0);
 

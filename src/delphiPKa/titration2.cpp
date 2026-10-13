@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
+// Modified on branch nucleic-acids by noshou: MPI C++ bindings (removed in MPI-3 / Open MPI 5) replaced by the C API.
 
 //
 //  titration2.cpp
@@ -37,7 +38,7 @@ void CTitration2 :: run()
     vector<vector<bool> > vecBool2d;
 
 #ifdef MPI_PARALLEL
-    int id = MPI::COMM_WORLD.Get_rank();  // MPI rank
+    int id = baysol_mpi_rank();  // MPI rank
     
     if(id==0) {
         
@@ -121,12 +122,12 @@ void CTitration2 :: run()
     
     int N = vecCluster1.size();
     
-    int numprocs = MPI::COMM_WORLD.Get_size();
+    int numprocs = baysol_mpi_size();
     int MPI_START, MPI_END;
     int rank_size = N / numprocs;
     MPI_START = ( N / numprocs) * id;
     
-    MPI::COMM_WORLD.Barrier();
+    MPI_Barrier(MPI_COMM_WORLD);
     
     
     float vecProbMPI[N];
@@ -288,13 +289,13 @@ void CTitration2 :: run()
 
 #ifdef MPI_PARALLEL
             
-        MPI::COMM_WORLD.Barrier();
+        MPI_Barrier(MPI_COMM_WORLD);
         
         int count = MPI_END - MPI_START;
         int rcount[numprocs];
         int displs[numprocs];
         
-        MPI::COMM_WORLD.Gather ( &count, 1, MPI::INT, &rcount[0], 1, MPI::INT, 0 );
+        MPI_Gather(&count, 1, MPI_INT, &rcount[0], 1, MPI_INT, 0, MPI_COMM_WORLD);
         
         if(id==0)
         {
@@ -305,9 +306,9 @@ void CTitration2 :: run()
             }
         }
         
-        MPI::COMM_WORLD.Gatherv( &vecProbMPI_partial[0], count, MPI::FLOAT, &vecProbMPI[0], rcount, displs, MPI::FLOAT, 0 );
+        MPI_Gatherv(&vecProbMPI_partial[0], count, MPI_FLOAT, &vecProbMPI[0], rcount, displs, MPI_FLOAT, 0, MPI_COMM_WORLD);
         
-        MPI::COMM_WORLD.Gatherv( &vecBoolMPI_partial[0], count, MPI::BOOL,  &vecBoolMPI[0], rcount, displs, MPI::BOOL,  0 );
+        MPI_Gatherv(&vecBoolMPI_partial[0], count, MPI_C_BOOL,  &vecBoolMPI[0], rcount, displs, MPI_C_BOOL,  0, MPI_COMM_WORLD);
     
    
         if(id==0) {

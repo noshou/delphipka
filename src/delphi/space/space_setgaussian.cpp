@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
+// Modified on branch nucleic-acids by noshou: setGaussian: per-atom cutoff over distance-sorted offsets (cached), OpenMP parallel offset loop.
 
 //Tips for Gaussian:
 //the new statement can be added by modifying following files:
@@ -20,6 +21,8 @@
 #include "../misc/misc_grid.h"
 #include "space_templates.h"
 #include "space.h"
+#include <algorithm>
+#include <numeric>
 
 using namespace std;
 
@@ -36,6 +39,14 @@ void CDelphiSpace::setGaussian()
     SGrid <delphi_real> * rad2aav=rad2aavtemp+150;
     SGrid <delphi_real> * vtemp2=vtemp2temp+150;
     SGrid <delphi_integer>* ioff;
+    // The offsets of ioff sorted by squared distance, so that an atom only walks the offsets that can
+    // touch its own (smaller or equal) cutoff sphere instead of the cube sized for the largest atom.
+    // They only depend on (lim, radtest), and a run uses just a few scales, so they are kept between calls.
+    static vector< SGrid <delphi_integer> > ioffS;
+    static vector<delphi_integer> ioffD2;
+    static delphi_integer ioffLim = -1;
+    static delphi_real    ioffRadtest = -1.0;
+    static int            ioffIbox = -2;
 
     ioff=NULL;
     bool itobig,itest2,ipore,bOnlyMolbDebug;
@@ -193,6 +204,23 @@ void CDelphiSpace::setGaussian()
             }// if
         }// if
         if(debug_space) cout << ibox <<": " << ioff[ibox] << idist << endl;
+
+        if (ioff != NULL && !itobig && ibox >= 0
+            && !(lim == ioffLim && radtest == ioffRadtest && ibox == ioffIbox && (int)ioffS.size() == ibox+1))
+        {
+            ioffLim = lim; ioffRadtest = radtest; ioffIbox = ibox;
+            vector<int> order(ibox+1);
+            iota(order.begin(), order.end(), 0);
+            auto d2of = [&](int k) { return ioff[k].nX*ioff[k].nX + ioff[k].nY*ioff[k].nY + ioff[k].nZ*ioff[k].nZ; };
+            stable_sort(order.begin(), order.end(), [&](int a, int b) { return d2of(a) < d2of(b); });
+            ioffS.resize(ibox+1);
+            ioffD2.resize(ibox+1);
+            for (int k = 0; k <= ibox; k++)
+            {
+                ioffS[k]  = ioff[order[k]];
+                ioffD2[k] = d2of(order[k]);
+            }
+        }
 
 
 
@@ -469,15 +497,22 @@ void CDelphiSpace::setGaussian()
                     //#pragma omp parallel for schedule(static) private(xn,rad,radp,rad2,radp2,itest2,ismin,ismax,itest,rad2a,ixn,fxn,rad2av,vtemp,rad2aavtemp,i123,ixyz,ix,iy,iz,distsq,sqtemp)
                     //#pragma omp parallel for schedule(static) private(xn,rad,radp,rad2,radp2,itest2,ismin,ismax,itest,rad2a,ixn,fxn,rad2av,vtemp,rad2aavtemp,i123,ixyz,ix,iy,iz,distsq,sqtemp) shared(idebmap)
 
+                    // A point can only be updated if (r + e_c/2)^2 < rad2 with r = offset + fxn and
+                    // |fxn| <= sqrt(3)/2 per cell, i.e. |offset| < rad + 1/2 + sqrt(3)/2. Offsets beyond that
+                    // never pass any of the three tests below, so skipping them changes nothing.
+                    const delphi_real rcut  = rad + 0.5 + 0.5*sqrt(3.0) + 1.0e-6;
+                    const int         nUse  = int(upper_bound(ioffD2.begin(), ioffD2.end(), rcut*rcut) - ioffD2.begin());
 #ifdef PARALLEL_OMP
-                    #pragma omp for schedule(auto)
-                    //#pragma omp parallel for schedule(static) private(xn,rad,radp,rad2,radp2,itest2,ismin,ismax,itest,rad2a,ixn,fxn,rad2av,vtemp,rad2aavtemp,i123,ixyz,ix,iy,iz,distsq,sqtemp)
+                    // Every offset in ioff is a distinct grid point, so no two iterations write the same
+                    // gepsmp element and each point still gets its atoms in the same order: bit-identical.
+                    // The loop was an orphaned "omp for" (outside any parallel region), i.e. serial.
+                    #pragma omp parallel for schedule(dynamic, 64) private(i123,ixyz,ix,iy,iz,distsq,distance2,den)
 #endif
 
-                    for(i=0; i<=ibox; i++)
+                    for(i=0; i<nUse; i++)
                     {
 
-                        i123=ioff[i];
+                        i123=ioffS[i];
                         ixyz=ixn+i123;
                         ix=ixyz.nX;
                         iy=ixyz.nY;

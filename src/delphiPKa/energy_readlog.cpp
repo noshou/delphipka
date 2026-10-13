@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
+// Modified on branch nucleic-acids by noshou: MPI C++ bindings (removed in MPI-3 / Open MPI 5) replaced by the C API.
 
 //
 //  energy_readlog.cpp
@@ -106,7 +107,7 @@ void CEnergy :: readFromFile()
     }
     
 #ifdef MPI_PARALLEL
-    int id = MPI::COMM_WORLD.Get_rank();
+    int id = baysol_mpi_rank();
     if (0==id) {
         cout << "Done." << endl; cout << endl;
     }
